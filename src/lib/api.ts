@@ -1,6 +1,13 @@
 import { ExerciseStats, LogExerciseRequest, LogExerciseResponse } from '@/types/exercise';
+import { HomeResponse } from '@/types/home';
+import api from '../utils/axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+
+export async function getHomeData(childId: number): Promise<HomeResponse> {
+    const { data } = await api.get(`/home/${childId}`);
+    return data;
+}
 
 export async function getExerciseStats(childId: number): Promise<ExerciseStats> {
     const response = await fetch(`${API_BASE_URL}/api/child/${childId}/exercise/stats`, {
