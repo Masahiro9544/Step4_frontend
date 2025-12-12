@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { logExercise } from '@/lib/api';
@@ -16,36 +16,19 @@ export default function DistanceViewPage() {
     const [timer, setTimer] = useState(20);
     const [isCompleted, setIsCompleted] = useState(false);
     const [message, setMessage] = useState('');
-    const { playSuccessSound } = useSound();
+    const { playSuccessSound, playSound } = useSound();
     const { speak } = useTextToSpeech();
 
     // TODO: 実際のchild_idはログイン情報から取得
     const childId = 1;
 
-    useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (timer > 0 && !isCompleted) {
-            interval = setInterval(() => {
-                setTimer((prev) => {
-                    const next = prev - 1;
-                    // カウントダウン音声 (5秒前、3,2,1)
-                    if (next === 10) speak("あと10秒だよ");
-                    if (next <= 5 && next > 0) speak(String(next));
-                    if (next === 0) speak("おしまい！");
-                    return next;
-                });
-            }, 1000);
-        } else if (timer === 0 && !isCompleted) {
-            // 終了時の音SE (プレースホルダー)
-            // playSound('/sounds/timer-end.mp3');
-        }
-        return () => clearInterval(interval);
-    }, [timer, isCompleted, speak]);
+    const [isStarted, setIsStarted] = useState(false);
 
-    const handleComplete = async () => {
+    const handleComplete = useCallback(async () => {
         try {
             // 成功音SE
             playSuccessSound();
+            playSound('/sounds/owarimerelax.wav');
             speak("よくやったね！");
 
             const today = new Date().toISOString().split('T')[0];
@@ -65,12 +48,73 @@ export default function DistanceViewPage() {
             setMessage('エラーが発生しました');
             console.error(error);
         }
-    };
+    }, [childId, playSound, playSuccessSound, speak, router]);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isStarted && timer > 0 && !isCompleted) {
+            interval = setInterval(() => {
+                setTimer((prev) => {
+                    const next = prev - 1;
+                    // カウントダウン音声 (5秒前、3,2,1)
+                    if (next === 10) speak("あと10秒だよ");
+                    if (next <= 5 && next > 0) speak(String(next));
+                    if (next === 0) speak("おしまい！");
+                    return next;
+                });
+            }, 1000);
+        } else if (isStarted && timer === 0 && !isCompleted) {
+            // 自動終了
+            handleComplete();
+        }
+        return () => clearInterval(interval);
+    }, [isStarted, timer, isCompleted, speak, handleComplete]);
+
+    if (!isStarted) {
+        return (
+            <div className="min-h-screen bg-[#E0F2F7] flex items-center justify-center p-4">
+                <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center space-y-8 border-4 border-[#0093D0]">
+                    <h2 className="text-3xl font-bold text-[#0093D0]">とおくを みよう</h2>
+
+                    <div className="space-y-4 text-xl text-gray-700 text-left">
+                        <p>
+                            まどから<br />
+                            <strong>とおくの くもや けしき</strong>を<br />
+                            みてみよう。
+                        </p>
+                        <p className="text-sm text-gray-500">
+                            ※ じゅんびができたら<br />
+                            「はじめる」をおしてね
+                        </p>
+                    </div>
+
+                    <div className="bg-red-50 text-red-500 p-4 rounded-xl text-sm font-bold border border-red-200">
+                        ⚠️ たいようは みないでね！
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            setIsStarted(true);
+                            playSound('/sounds/tokujissityu.wav');
+                        }}
+                        className="w-full py-6 bg-[#0093D0] hover:bg-[#007bb5] text-white rounded-2xl font-bold text-2xl shadow-lg transition-transform active:scale-95"
+                    >
+                        はじめる
+                    </button>
+
+                    <button
+                        onClick={() => router.back()}
+                        className="text-gray-400 font-bold hover:text-gray-600 underline"
+                    >
+                        もどる
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen relative flex flex-col overflow-hidden">
-
-
             {/* 背景 (雲のアート) */}
             <CloudBackground />
 
@@ -85,12 +129,16 @@ export default function DistanceViewPage() {
                 </svg>
             </motion.div>
 
-            <header className="p-4 flex justify-between items-center z-10">
-                <button onClick={() => router.back()} className="text-2xl text-gray-600 bg-white/50 backdrop-blur-sm rounded-full w-12 h-12 hover:bg-white/80 transition">✕</button>
+            <header className="p-4 flex justify-between items-center z-10 w-full">
+                <button
+                    onClick={() => router.back()}
+                    className="bg-white/50 hover:bg-white/80 text-gray-700 font-bold py-2 px-4 rounded-full backdrop-blur-sm transition-all"
+                >
+                    ✕ やめる
+                </button>
                 <SoundToggle className="text-gray-600 bg-white/50 hover:bg-white/80" />
             </header>
 
-            {/* メインコンテンツ - モバイル最適化レイアウト */}
             {/* メインコンテンツ - モバイル最適化レイアウト */}
             <div className="relative z-10 w-full flex-1 flex flex-col p-4 pointer-events-none">
 
@@ -154,10 +202,10 @@ export default function DistanceViewPage() {
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-white/40 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/50 mb-2 md:mb-0"
                         >
-                            <h1 className="text-lg md:text-xl font-bold mb-1 text-gray-800 drop-shadow-sm">遠くを見よう</h1>
-                            <p className="text-sm md:text-base font-bold text-gray-700 mb-1 leading-tight">窓の外の景色を見て！</p>
+                            <h1 className="text-lg md:text-xl font-bold mb-1 text-gray-800 drop-shadow-sm">とおくを みよう</h1>
+                            <p className="text-sm md:text-base font-bold text-gray-700 mb-1 leading-tight">まどの そとの けしきを みて！</p>
                             <div className="bg-red-500 text-white text-[10px] md:text-xs py-1 px-2 rounded-full inline-block font-bold shadow-sm whitespace-nowrap">
-                                ⚠️ 太陽は見ないで
+                                ⚠️ たいようは みないで
                             </div>
                         </motion.div>
                     </div>

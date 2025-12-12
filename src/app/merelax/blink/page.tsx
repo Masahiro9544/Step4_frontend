@@ -12,8 +12,10 @@ import { useSound } from '@/hooks/useSound';
 export default function BlinkPage() {
     const router = useRouter();
     const [isCompleted, setIsCompleted] = useState(false);
+    const [isStarted, setIsStarted] = useState(false);
     const [message, setMessage] = useState('');
-    const { playSuccessSound } = useSound();
+    const [characterBlinking, setCharacterBlinking] = useState(false);
+    const { playSuccessSound, playSound } = useSound();
     const { speak } = useTextToSpeech();
 
     // TODO: 実際のchild_idはログイン情報から取得
@@ -21,35 +23,45 @@ export default function BlinkPage() {
 
     // リズムガイド音声
     useEffect(() => {
-        if (isCompleted) return;
+        if (!isStarted || isCompleted) return;
 
-        // CSSアニメーション(4秒周期)に合わせて声を出す
-        // 0s: start (開いている)
-        // 0.2s: closing (閉じて)
-        // 2.0s: opening (開けて)
+        // 40秒後に終了
+        const finishTimer = setTimeout(() => {
+            handleComplete();
+        }, 40000);
+
+        let innerTimer: NodeJS.Timeout;
+
+        // 0s: start (intro sound)
+        // delayed start loop
         const loop = () => {
-            speak("閉じて〜");
-            setTimeout(() => {
-                speak("パッ！");
-            }, 2000);
+            playSound('/sounds/metojiru.wav');
+            setCharacterBlinking(true);
+            innerTimer = setTimeout(() => {
+                playSound('/sounds/mehiraku.wav');
+                setCharacterBlinking(false);
+            }, 5000); // 5秒間目を閉じる
         };
 
-        // 初回
-        const timer1 = setTimeout(loop, 100);
-        // ループ
-        const interval = setInterval(loop, 4000);
+        // 初回 (イントロ待機後に開始)
+        const timer1 = setTimeout(loop, 4000);
+        // ループ (10秒ごと)
+        const interval = setInterval(loop, 10000);
 
         return () => {
+            clearTimeout(finishTimer);
             clearTimeout(timer1);
             clearInterval(interval);
+            clearTimeout(innerTimer);
         };
-    }, [isCompleted, speak]);
+    }, [isStarted, isCompleted, speak, playSound]);
 
     const handleComplete = async () => {
         try {
             // 成功音SE
             playSuccessSound();
-            speak("すごい！目がスッキリしたね");
+            playSound('/sounds/owarimerelax.wav');
+            speak("すごい！ めが スッキリ したね");
 
             const today = new Date().toISOString().split('T')[0];
             const response = await logExercise(childId, {
@@ -68,6 +80,41 @@ export default function BlinkPage() {
             console.error(error);
         }
     };
+
+    if (!isStarted) {
+        return (
+            <div className="min-h-screen bg-merelax-blink/10 flex items-center justify-center p-4">
+                <div className="bg-white/80 p-8 rounded-3xl shadow-xl max-w-md w-full text-center space-y-8 border-4 border-merelax-blink">
+                    <h2 className="text-3xl font-bold text-merelax-blink">まばたき</h2>
+
+                    <div className="space-y-4 text-xl text-gray-700 text-left">
+                        <p>
+                            こえに あわせて<br />
+                            <strong>パチパチ</strong> まばたきを<br />
+                            してみよう。
+                        </p>
+                        <p className="text-sm text-gray-500">
+                            ※ おとが なるよ
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={() => setIsStarted(true)}
+                        className="w-full py-6 bg-merelax-blink hover:bg-merelax-blink/80 text-white rounded-2xl font-bold text-2xl shadow-lg transition-transform active:scale-95"
+                    >
+                        はじめる
+                    </button>
+
+                    <button
+                        onClick={() => router.back()}
+                        className="text-gray-400 font-bold hover:text-gray-600 underline"
+                    >
+                        もどる
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-merelax-blink/10 relative flex flex-col overflow-hidden">
@@ -102,11 +149,11 @@ export default function BlinkPage() {
                     animate={{ scale: 1, opacity: 1 }}
                     className="bg-white/60 backdrop-blur-md rounded-3xl p-8 shadow-xl mb-8 w-full border border-white"
                 >
-                    <p className="text-xl mb-8 font-bold text-gray-700">パチパチくんのマネをしてね！</p>
+                    <p className="text-xl mb-8 font-bold text-gray-700">めめめちゃんの マネを してね！</p>
 
                     {/* キャラクター画像 (ユーザー提供 + AI生成差分) */}
                     <div className="flex justify-center items-center mb-8 relative h-64">
-                        <CharacterBlink />
+                        <CharacterBlink isBlinking={characterBlinking} />
 
                         {/* セリフの吹き出し */}
                         <motion.div
@@ -123,10 +170,10 @@ export default function BlinkPage() {
                         <motion.div
                             className="bg-merelax-blink h-2.5 rounded-full"
                             animate={{ width: ["0%", "100%", "0%"] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
                         />
                     </div>
-                    <p className="text-sm text-gray-400">バーに合わせてやってみよう</p>
+                    <p className="text-sm text-gray-400">バーに あわせて やってみよう</p>
                 </motion.div>
 
                 <motion.button

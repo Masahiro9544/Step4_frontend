@@ -1,29 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback } from 'react';
+import { useSoundContext } from '@/context/SoundContext';
 
 export function useSound() {
-    const [soundEnabled, setSoundEnabled] = useState(true);
+    // コンテキストからグローバルな状態を取得
+    const { soundEnabled, toggleSound, registerAudio, stopAll } = useSoundContext();
 
-    useEffect(() => {
-        // ローカルストレージから設定を読み込み
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('merelax_sound_enabled');
-            if (saved !== null) {
-                setSoundEnabled(saved === 'true');
-            }
-        }
-    }, []);
-
-    const toggleSound = () => {
-        const newValue = !soundEnabled;
-        setSoundEnabled(newValue);
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('merelax_sound_enabled', String(newValue));
-        }
-    };
-
-    const playButtonSound = () => {
+    const playButtonSound = useCallback(() => {
         if (!soundEnabled) return;
 
         const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -42,9 +26,9 @@ export function useSound() {
 
         osc.start();
         osc.stop(audioCtx.currentTime + 0.1);
-    };
+    }, [soundEnabled]);
 
-    const playSuccessSound = () => {
+    const playSuccessSound = useCallback(() => {
         if (!soundEnabled) return;
 
         const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -69,14 +53,20 @@ export function useSound() {
             osc.start(now);
             osc.stop(now + 0.5);
         });
-    };
+    }, [soundEnabled]);
 
     // 既存のplaySoundは互換性のために残すが、基本はSE生成を使う
-    const playSound = (audioUrl: string) => {
+    const playSound = useCallback((audioUrl: string) => {
         if (!soundEnabled) return;
-        const audio = new Audio(audioUrl);
-        audio.play().catch(console.error);
-    };
 
-    return { soundEnabled, toggleSound, playSound, playButtonSound, playSuccessSound };
+        // 既存の音を止めてから鳴らす (被りを防ぐため)
+        // ここではstopAllまでしなくていいが、長尺SEの場合は以前のを止めたい
+        stopAll();
+
+        const audio = new Audio(audioUrl);
+        registerAudio(audio);
+        audio.play().catch(console.error);
+    }, [soundEnabled, stopAll, registerAudio]);
+
+    return { soundEnabled, toggleSound, playSound, playButtonSound, playSuccessSound, stopAll };
 }

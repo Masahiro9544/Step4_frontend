@@ -1,4 +1,4 @@
-export type ExerciseType = 'distance_view' | 'blink' | 'eye_tracking';
+export type ExerciseType = 'distance_view' | 'blink' | 'eye_tracking' | 'rule' | 'jump';
 
 export interface Exercise {
     exercise_id: number;

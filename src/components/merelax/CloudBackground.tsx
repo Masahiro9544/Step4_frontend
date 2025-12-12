@@ -7,11 +7,11 @@ export default function CloudBackground() {
     const [cloudImage, setCloudImage] = useState<string>('');
 
     useEffect(() => {
-        // 画像生成の制限により、現在はウサギ雲のみを使用
-        // 本来は ['cloud_rabbit.png', 'cloud_whale.png', ...] からランダム選択
+        // ランダムで表示する雲の画像
         const clouds = [
+            '/images/character/cloud_whale.png',
+            '/images/character/cloud_dragon.png',
             '/images/character/cloud_rabbit.png',
-            '/images/character/cloud_rabbit.png', // プレースホルダーとして重複
         ];
         const randomCloud = clouds[Math.floor(Math.random() * clouds.length)];
         setCloudImage(randomCloud);
@@ -20,20 +20,20 @@ export default function CloudBackground() {
     if (!cloudImage) return null;
 
     return (
-        <div className="absolute inset-0 z-0 overflow-hidden">
+        <div className="absolute inset-0 z-0 overflow-hidden bg-[#E0F2F7]">
             <AnimatePresence>
                 <motion.div
                     key={cloudImage}
-                    className="absolute inset-0"
+                    className="absolute inset-0 flex items-center justify-center"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 1 }}
                 >
-                    {/* 背景画像 */}
+                    {/* 背景画像 - スマホで上が見切れないようにcontain & centerにする */}
                     <img
                         src={cloudImage}
                         alt="Cloud Art"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain p-2"
                     />
 
                     {/* 窓枠のオーバーレイ効果（CSSで簡易的に強調） */}
