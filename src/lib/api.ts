@@ -1,6 +1,6 @@
 import { ExerciseStats, LogExerciseRequest, LogExerciseResponse } from '@/types/exercise';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8000';
 
 export async function getExerciseStats(childId: number): Promise<ExerciseStats> {
     try {
