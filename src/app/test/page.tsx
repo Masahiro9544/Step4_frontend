@@ -69,21 +69,24 @@ function TestContent() {
         const guide = async () => {
             const pause = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-            speak('いまから しりょくチェックを かいしします');
-            await pause(3000);
+            // speak('いまから しりょくチェックを かいしします');
+            // await pause(3000);
 
             if (distance === '30cm') {
-                speak('がめんから 30センチ はなれよう');
+                // speak('がめんから 30センチ はなれよう');
+                playSound('shiryoku30cm.wav');
             } else {
-                speak('がめんから 3メートル はなれよう');
+                // speak('がめんから 3メートル はなれよう');
+                playSound('shiryoku3m.wav');
             }
-            await pause(3000);
+            await pause(7000); // Wait for distance voice (approx 5-7s)
 
-            speak('みぎめを かくしてね');
-            await pause(3000);
+            // speak('みぎめを かくしてね');
+            playSound('migimekarahidarime.wav');
+            await pause(6000); // Wait for eye instruction
 
-            speak('ともだちや おとなのひとに かくしてもらってね');
-            await pause(4000);
+            // speak('ともだちや おとなのひとに かくしてもらってね');
+            // await pause(4000);
 
             speak('じゅんびができたら、はじめます。オーケー、といってください');
         };
