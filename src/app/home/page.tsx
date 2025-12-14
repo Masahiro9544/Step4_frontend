@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import AnimatedBackground from '@/components/ui/AnimatedBackground';
 import CharacterMessage from '@/components/home/CharacterMessage';
 import ResultSummary from '@/components/home/ResultSummary';
 import { getHomeData } from '@/lib/api';
@@ -30,7 +29,7 @@ export default function HomePage() {
             // エラー時はデフォルトデータを設定
             setHomeData({
                 missions: [
-                    { mission_id: '1', title: 'しりょくチェック', status: 'pending', link: '/eyetest' },
+                    { mission_id: '1', title: 'しりょくチェック', status: 'pending', link: '/vision-home' },
                     { mission_id: '2', title: 'きょりチェック', status: 'pending', link: '/distancecheck' },
                     { mission_id: '3', title: 'まばたきゲーム', status: 'pending', link: '/blinkchallenge' },
                     { mission_id: '4', title: 'めのたいそう', status: 'pending', link: '/merelax' },
@@ -165,3 +164,4 @@ export default function HomePage() {
         </div>
     );
 }
+
