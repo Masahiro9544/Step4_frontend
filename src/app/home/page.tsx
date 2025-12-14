@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import AnimatedBackground from '@/components/ui/AnimatedBackground';
 import CharacterMessage from '@/components/home/CharacterMessage';
 import ResultSummary from '@/components/home/ResultSummary';
-import Footer from '@/components/Footer';
 import { getHomeData } from '@/lib/api';
 import { HomeResponse } from '@/types/home';
 
@@ -31,7 +30,7 @@ export default function HomePage() {
             // エラー時はデフォルトデータを設定
             setHomeData({
                 missions: [
-                    { mission_id: '1', title: 'しりょくチェック', status: 'pending', link: '/vision-home' },
+                    { mission_id: '1', title: 'しりょくチェック', status: 'pending', link: '/eyetest' },
                     { mission_id: '2', title: 'きょりチェック', status: 'pending', link: '/distancecheck' },
                     { mission_id: '3', title: 'まばたきゲーム', status: 'pending', link: '/blinkchallenge' },
                     { mission_id: '4', title: 'めのたいそう', status: 'pending', link: '/merelax' },
@@ -132,9 +131,37 @@ export default function HomePage() {
                         <ResultSummary results={homeData.last_results} />
                     </motion.div>
                 )}
-                <Footer activeTab="home" />
             </main>
+
+            {/* 下部ナビゲーションバー */}
+            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t-2 z-50" style={{ borderColor: '#00A0E9' }}>
+                <div className="max-w-md mx-auto px-4 py-4 flex justify-around items-center">
+                    <button
+                        onClick={() => router.push('/home')}
+                        className="flex flex-col items-center transition-colors min-w-[80px] min-h-[80px] justify-center"
+                        style={{ color: '#00A0E9' }}
+                    >
+                        <span className="text-3xl mb-1">🏠</span>
+                        <span className="text-base font-bold">ホーム</span>
+                    </button>
+                    <button
+                        onClick={() => router.push('/merelax')}
+                        className="flex flex-col items-center text-gray-400 transition-colors min-w-[80px] min-h-[80px] justify-center"
+                        style={{ color: '#999' }}
+                    >
+                        <span className="text-3xl mb-1">💪</span>
+                        <span className="text-base font-bold">たいそう</span>
+                    </button>
+                    <button
+                        onClick={() => router.push('/record')}
+                        className="flex flex-col items-center text-gray-400 transition-colors min-w-[80px] min-h-[80px] justify-center"
+                        style={{ color: '#999' }}
+                    >
+                        <span className="text-3xl mb-1">📊</span>
+                        <span className="text-base font-bold">きろく</span>
+                    </button>
+                </div>
+            </nav>
         </div>
     );
 }
-
